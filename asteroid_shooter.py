@@ -9,7 +9,8 @@ Screenheight = 666
 reset_button_hovered = False
 
 sound = True
-
+sound_effect = None
+hight_score = None
 
 #region Asteroid Class
 class Asteroid:
@@ -119,9 +120,10 @@ game_active = True
 asteroid_list = [create_new_asteroid()]
 destruction_counter = 0
 font = pygame.font.Font(None, 36)
+rect_rotated = pygame.transform.rotate(pygame.image.load("./assets/Asteroid/Asteroid1.png").convert_alpha(), 0).get_rect(center=(0, 0))
 
 start_time = pygame.time.get_ticks()
-game_duration = 10 * 1000
+game_duration = 30 * 1000
 #endregion Game Setup
 
 #region Explosion Animation
@@ -180,6 +182,7 @@ while continuer:
         current_time = pygame.time.get_ticks()
         elapsed_time = current_time - start_time
         remaining_time = max(0, (game_duration - elapsed_time) // 1000)
+        nbr_asteroid = 1
 
         if elapsed_time >= game_duration:
             game_active = False
@@ -193,32 +196,43 @@ while continuer:
                 pos_Crosshair = event.pos
             if event.type == pygame.MOUSEBUTTONDOWN:
                 for asteroid in asteroid_list:
+                    AsteroidImglien = "./assets/Asteroid/Asteroid" + str(asteroid.getSkin()) + ".png"
+                    AsteroidImg = pygame.image.load(AsteroidImglien).convert_alpha()
+                    image_rotated = pygame.transform.rotate(AsteroidImg, asteroid.getRotate())
+                    rect_rotated = image_rotated.get_rect(center=(asteroid.getX(), asteroid.getY()))
+
+                    # Check if the click is inside the bounding rectangle of the rotated asteroid image
                     if rect_rotated.collidepoint(event.pos):
-                        # Handle asteroid destruction
+                        # Handle asteroid destruction for the clicked asteroid
                         asteroid_list.remove(asteroid)
                         asteroid_list.append(create_new_asteroid())
                         destruction_counter += 1
 
-                        if sound :
+                        if sound:
                             sound_effect = pygame.mixer.Sound("./assets/sound/Explosion.mp3")
                             sound_effect.play()
+
                         AsteroidImglien = "./assets/ExplosionAsteroid/ExplosionAsteroid" + str(asteroid.getSkin()) + ".png"
                         AsteroidImg = pygame.image.load(AsteroidImglien).convert_alpha()
                         image_rotated = pygame.transform.rotate(AsteroidImg, asteroid.getRotate())
                         rect_rotated = image_rotated.get_rect(center=(asteroid.getX(), asteroid.getY()))
                         ecran.blit(image_rotated, rect_rotated.topleft)
                         explosion_rect = display_explosion(event.pos, ecran)
+                        value = [1, 2, 3]
+                        proba = [0.6, 0.3, 0.1]
+                        random.choices(value, weights=proba)[0]
 
                         for asteroid in asteroid_list:
                             asteroid.speed += 0.01
-                    elif soundImg_rect.collidepoint(event.pos):
-                        if not sound :
-                            sound_effect = pygame.mixer.Sound("./assets/sound/Missed.mp3")
-                            sound_effect.play()
-                    else :
-                        if sound :
-                            sound_effect = pygame.mixer.Sound("./assets/sound/Missed.mp3")
-                            sound_effect.play()
+
+                if soundImg_rect.collidepoint(event.pos):
+                    if not sound:
+                        sound_effect = pygame.mixer.Sound("./assets/sound/Missed.mp3")
+                        sound_effect.play()
+                else:
+                    if sound:
+                        sound_effect = pygame.mixer.Sound("./assets/sound/Missed.mp3")
+                        sound_effect.play()
             if event.type == pygame.MOUSEBUTTONDOWN and soundImg_rect.collidepoint(event.pos):
                 if sound :
                     sound = False
@@ -252,6 +266,8 @@ while continuer:
                 asteroid_list.append(create_new_asteroid())
                 for asteroid in asteroid_list:
                     asteroid.speed += 0.01
+            if len(asteroid_list) <= nbr_asteroid:
+                asteroid_list.append(create_new_asteroid())
 
         # Draw UI elements
         counter_text = font.render(f'Destructions: {destruction_counter}', True, (255, 255, 255))
@@ -287,7 +303,7 @@ while continuer:
     else:
         # Display current score in white
         score_text = font.render(f'Score: {destruction_counter}', True, (255, 255, 255))
-        hight_score = font.render(f'New High Score: {saved_score}', True, pygame.Color('yellow'))
+        hight_score = font.render(f'High Score: {saved_score}', True, pygame.Color('yellow'))
 
     # Render the reset button
     reset_button_text = font.render('Reset Score', True, (255, 255, 255))
