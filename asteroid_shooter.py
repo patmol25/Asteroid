@@ -123,7 +123,7 @@ font = pygame.font.Font(None, 36)
 rect_rotated = pygame.transform.rotate(pygame.image.load("./assets/Asteroid/Asteroid1.png").convert_alpha(), 0).get_rect(center=(0, 0))
 
 start_time = pygame.time.get_ticks()
-game_duration = 30 * 1000
+game_duration = 15 * 1000
 #endregion Game Setup
 
 #region Explosion Animation
@@ -153,6 +153,13 @@ def display_explosion(pos, ecran):
         explosion_surface = pygame.Surface((Screenwide, Screenheight), pygame.SRCALPHA)
         explosion_surface.blit(explosion_scaled, explosion_rect.topleft)
 
+        #Show other asteroids
+        for asteroid in asteroid_list:
+            AsteroidImglien = "./assets/Asteroid/Asteroid" + str(asteroid.getSkin()) + ".png"
+            AsteroidImg = pygame.image.load(AsteroidImglien).convert_alpha()
+            image_rotated = pygame.transform.rotate(AsteroidImg, asteroid.getRotate())
+            rect_rotated = image_rotated.get_rect(center=(asteroid.getX(), asteroid.getY()))
+            ecran.blit(image_rotated, rect_rotated.topleft)
         # Draw lines from the lower corners to the center of the target with a 1-pixel black border
         pygame.draw.line(ecran, (0, 0, 0), (57, Screenheight-37), pos_Crosshair, 14)
         pygame.draw.line(ecran, (0, 0, 0), (Screenwide-57, Screenheight-37), pos_Crosshair, 14)
@@ -167,6 +174,7 @@ def display_explosion(pos, ecran):
         ecran.blit(soundImg, soundImg_rect.topleft)
         ecran.blit(counter_text, (70, 5))
         ecran.blit(timer_text, (Screenwide-250, 5))
+
         # Update the display
         pygame.display.flip()
 
@@ -207,6 +215,7 @@ while continuer:
                         asteroid_list.remove(asteroid)
                         asteroid_list.append(create_new_asteroid())
                         destruction_counter += 1
+                        game_duration += 500
 
                         if sound:
                             sound_effect = pygame.mixer.Sound("./assets/sound/Explosion.mp3")
@@ -223,7 +232,7 @@ while continuer:
                         random.choices(value, weights=proba)[0]
 
                         for asteroid in asteroid_list:
-                            asteroid.speed += 0.01
+                            asteroid.speed += 0.07
 
                 if soundImg_rect.collidepoint(event.pos):
                     if not sound:
