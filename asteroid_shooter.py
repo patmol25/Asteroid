@@ -1,5 +1,6 @@
 import random
 import pygame
+from pygame.math import Vector2
 
 # Screen dimensions
 Screenwide = 1000
@@ -19,7 +20,6 @@ class Asteroid:
         self.skin = random.randint(1, 5)
         self.rotate = random.randint(0, 359)
         self.start = random.randint(37, Screenheight-37)
-        self.end = random.randint(37, Screenheight-37)
         self.speed = random.uniform(0.3, 0.7)
         self.direction = random.choice([-1, 1])
         self.x = Screenwide-57
@@ -41,8 +41,6 @@ class Asteroid:
     def getStart(self):
         return self.start
 
-    def getEnd(self):
-        return self.end
 
     def getSpeed(self):
         return self.speed
@@ -123,7 +121,7 @@ font = pygame.font.Font(None, 36)
 rect_rotated = pygame.transform.rotate(pygame.image.load("./assets/Asteroid/Asteroid1.png").convert_alpha(), 0).get_rect(center=(0, 0))
 
 start_time = pygame.time.get_ticks()
-game_duration = 15 * 1000
+game_duration = 30 * 1000
 #endregion Game Setup
 
 #region Explosion Animation
@@ -134,13 +132,13 @@ def display_explosion(pos, ecran):
     ExplosionTime = pygame.time.get_ticks()
     explosion_rect = None
 
-    while pygame.time.get_ticks() - ExplosionTime < explosion_duration:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                exit()
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            exit()
 
-        # Calculate the scaling factor based on time
+    # Calculate the scaling factor based on time
+    while pygame.time.get_ticks() - ExplosionTime < explosion_duration:
         explosion_scale = min(explosion_scale + 0.08, 2.0)  # Increase scale gradually, up to a maximum of 2
 
         # Resize the explosion image
@@ -160,6 +158,7 @@ def display_explosion(pos, ecran):
             image_rotated = pygame.transform.rotate(AsteroidImg, asteroid.getRotate())
             rect_rotated = image_rotated.get_rect(center=(asteroid.getX(), asteroid.getY()))
             ecran.blit(image_rotated, rect_rotated.topleft)
+
         # Draw lines from the lower corners to the center of the target with a 1-pixel black border
         pygame.draw.line(ecran, (0, 0, 0), (57, Screenheight-37), pos_Crosshair, 14)
         pygame.draw.line(ecran, (0, 0, 0), (Screenwide-57, Screenheight-37), pos_Crosshair, 14)
@@ -180,6 +179,7 @@ def display_explosion(pos, ecran):
 
         # Control the frame rate
         pygame.time.delay(30)
+
     return explosion_rect
 #endregion Explosion Animation
 
@@ -212,35 +212,39 @@ while continuer:
                     # Check if the click is inside the bounding rectangle of the rotated asteroid image
                     if rect_rotated.collidepoint(event.pos):
                         # Handle asteroid destruction for the clicked asteroid
-                        asteroid_list.remove(asteroid)
-                        asteroid_list.append(create_new_asteroid())
+                        
                         destruction_counter += 1
                         game_duration += 500
 
                         if sound:
                             sound_effect = pygame.mixer.Sound("./assets/sound/Explosion.mp3")
+                            sound_effect.set_volume(0.1)
                             sound_effect.play()
-
+                        
                         AsteroidImglien = "./assets/ExplosionAsteroid/ExplosionAsteroid" + str(asteroid.getSkin()) + ".png"
                         AsteroidImg = pygame.image.load(AsteroidImglien).convert_alpha()
                         image_rotated = pygame.transform.rotate(AsteroidImg, asteroid.getRotate())
                         rect_rotated = image_rotated.get_rect(center=(asteroid.getX(), asteroid.getY()))
                         ecran.blit(image_rotated, rect_rotated.topleft)
                         explosion_rect = display_explosion(event.pos, ecran)
+                        asteroid_list.remove(asteroid)
                         value = [1, 2, 3]
-                        proba = [0.6, 0.3, 0.1]
-                        random.choices(value, weights=proba)[0]
-
+                        proba = [0.95, 0.04, 0.01]
+                        result = random.choices(value, weights=proba)[0]
+                        for i in range (result) :
+                            asteroid_list.append(create_new_asteroid())
                         for asteroid in asteroid_list:
-                            asteroid.speed += 0.07
+                            asteroid.speed += 0.01
 
                 if soundImg_rect.collidepoint(event.pos):
                     if not sound:
                         sound_effect = pygame.mixer.Sound("./assets/sound/Missed.mp3")
+                        sound_effect.set_volume(0.1)
                         sound_effect.play()
                 else:
                     if sound:
                         sound_effect = pygame.mixer.Sound("./assets/sound/Missed.mp3")
+                        sound_effect.set_volume(0.1)
                         sound_effect.play()
             if event.type == pygame.MOUSEBUTTONDOWN and soundImg_rect.collidepoint(event.pos):
                 if sound :
@@ -335,6 +339,7 @@ while continuer:
             # Reset the score and exit the game if the reset button is clicked
             if sound :
                 sound_effect = pygame.mixer.Sound("./assets/sound/Explosion.mp3")
+                sound_effect.set_volume(0.1)
                 sound_effect.play()
             pygame.time.delay(int(sound_effect.get_length() * 1000))
             save_score(0)
