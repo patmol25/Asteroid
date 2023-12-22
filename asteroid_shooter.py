@@ -1,6 +1,5 @@
 import random
 import pygame
-from pygame.math import Vector2
 
 # Screen dimensions
 Screenwide = 1000
@@ -18,6 +17,7 @@ class Asteroid:
     def __init__(self):
         # Initialize asteroid properties randomly
         self.skin = random.randint(1, 5)
+        self.explosion = False
         self.rotate = random.randint(0, 359)
         self.start = random.randint(37, Screenheight-37)
         self.speed = random.uniform(0.3, 0.7)
@@ -32,6 +32,12 @@ class Asteroid:
     def setSkin(self, value):
         self.skin = value
 
+    def getExplosion(self):
+        return self.explosion
+
+    def setExplosion(self, value):
+        self.explosion = value
+
     def getRotate(self):
         return self.rotate
 
@@ -40,7 +46,6 @@ class Asteroid:
 
     def getStart(self):
         return self.start
-
 
     def getSpeed(self):
         return self.speed
@@ -139,6 +144,14 @@ def display_explosion(pos, ecran):
 
     # Calculate the scaling factor based on time
     while pygame.time.get_ticks() - ExplosionTime < explosion_duration:
+        #Show other asteroids
+        for asteroid in asteroid_list:
+            if not asteroid.getExplosion :
+                AsteroidImglien = "./assets/Asteroid/Asteroid" + str(asteroid.getSkin()) + ".png"
+                AsteroidImg = pygame.image.load(AsteroidImglien).convert_alpha()
+                image_rotated = pygame.transform.rotate(AsteroidImg, asteroid.getRotate())
+                rect_rotated = image_rotated.get_rect(center=(asteroid.getX(), asteroid.getY()))
+                ecran.blit(image_rotated, rect_rotated.topleft)
         explosion_scale = min(explosion_scale + 0.08, 2.0)  # Increase scale gradually, up to a maximum of 2
 
         # Resize the explosion image
@@ -150,14 +163,6 @@ def display_explosion(pos, ecran):
         # Draw the explosion on a transparent surface
         explosion_surface = pygame.Surface((Screenwide, Screenheight), pygame.SRCALPHA)
         explosion_surface.blit(explosion_scaled, explosion_rect.topleft)
-
-        #Show other asteroids
-        for asteroid in asteroid_list:
-            AsteroidImglien = "./assets/Asteroid/Asteroid" + str(asteroid.getSkin()) + ".png"
-            AsteroidImg = pygame.image.load(AsteroidImglien).convert_alpha()
-            image_rotated = pygame.transform.rotate(AsteroidImg, asteroid.getRotate())
-            rect_rotated = image_rotated.get_rect(center=(asteroid.getX(), asteroid.getY()))
-            ecran.blit(image_rotated, rect_rotated.topleft)
 
         # Draw lines from the lower corners to the center of the target with a 1-pixel black border
         pygame.draw.line(ecran, (0, 0, 0), (57, Screenheight-37), pos_Crosshair, 14)
@@ -212,7 +217,7 @@ while continuer:
                     # Check if the click is inside the bounding rectangle of the rotated asteroid image
                     if rect_rotated.collidepoint(event.pos):
                         # Handle asteroid destruction for the clicked asteroid
-                        
+                        asteroid.setExplosion(True)
                         destruction_counter += 1
                         game_duration += 500
 
@@ -221,12 +226,12 @@ while continuer:
                             sound_effect.set_volume(0.1)
                             sound_effect.play()
                         
+                        explosion_rect = display_explosion(event.pos, ecran)
                         AsteroidImglien = "./assets/ExplosionAsteroid/ExplosionAsteroid" + str(asteroid.getSkin()) + ".png"
                         AsteroidImg = pygame.image.load(AsteroidImglien).convert_alpha()
                         image_rotated = pygame.transform.rotate(AsteroidImg, asteroid.getRotate())
                         rect_rotated = image_rotated.get_rect(center=(asteroid.getX(), asteroid.getY()))
                         ecran.blit(image_rotated, rect_rotated.topleft)
-                        explosion_rect = display_explosion(event.pos, ecran)
                         asteroid_list.remove(asteroid)
                         value = [1, 2, 3]
                         proba = [0.95, 0.04, 0.01]
@@ -276,6 +281,7 @@ while continuer:
 
             if asteroid.getX() < 0 and rect_rotated.colliderect(ecran.get_rect()):
                 asteroid_list.remove(asteroid)
+                game_duration -= 2000
                 asteroid_list.append(create_new_asteroid())
                 for asteroid in asteroid_list:
                     asteroid.speed += 0.01
@@ -352,7 +358,6 @@ while continuer:
         reset_button_hovered = reset_button_rect.collidepoint(pygame.mouse.get_pos())
 
     # Draw important UI elements
-    ecran.blit(CrosshairImg, (pos_Crosshair[0] - CrosshairImg.get_width() / 2, pos_Crosshair[1] - CrosshairImg.get_height() / 2))
     ecran.blit(background_overlay, (0, 0))
     ecran.blit(score_text, (70, 5))
     if destruction_counter < saved_score:
@@ -360,9 +365,9 @@ while continuer:
     reset_button_text_rect = reset_button_text.get_rect(topleft=(Screenwide-250, 5))
     # Highlight the reset button if hovered
     if reset_button_hovered:
-        pygame.draw.rect(ecran, (255, 255, 0), reset_button_text_rect.inflate(6, 6))
-        reset_button_text = font.render('Reset Score', True, (0, 0, 0))
-    ecran.blit(reset_button_text, (Screenwide-250, 5))
+        reset_button_text = font.render('Reset Score', True, (255, 255, 0))
+    ecran.blit(reset_button_text, (Screenwide-250, 5))    
+    ecran.blit(CrosshairImg, (pos_Crosshair[0] - CrosshairImg.get_width() / 2, pos_Crosshair[1] - CrosshairImg.get_height() / 2))
     pygame.display.flip()
     #endregion Game Over Screen
 
