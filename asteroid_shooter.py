@@ -232,12 +232,12 @@ while continuer:
                             sound_effect.set_volume(0.1)
                             sound_effect.play()
                         
-                        explosion_rect = display_explosion(event.pos, ecran)
                         AsteroidImglien = "./assets/ExplosionAsteroid/ExplosionAsteroid" + str(asteroid.getSkin()) + ".png"
                         AsteroidImg = pygame.image.load(AsteroidImglien).convert_alpha()
                         image_rotated = pygame.transform.rotate(AsteroidImg, asteroid.getRotate())
                         rect_rotated = image_rotated.get_rect(center=(asteroid.getX(), asteroid.getY()))
                         ecran.blit(image_rotated, rect_rotated.topleft)
+                        explosion_rect = display_explosion(event.pos, ecran)
                         asteroid_list.remove(asteroid)
                         value = [1, 2, 3]
                         proba = [0.95, 0.04, 0.01]
@@ -245,7 +245,7 @@ while continuer:
                         for i in range (result) :
                             asteroid_list.append(create_new_asteroid())
                         for asteroid in asteroid_list:
-                            asteroid.speed += 0.01
+                            asteroid.speed += 0.05
 
                 if soundImg_rect.collidepoint(event.pos):
                     if not sound:
