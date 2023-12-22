@@ -142,36 +142,44 @@ def display_explosion(pos, ecran):
             pygame.quit()
             exit()
 
+    # Create a new list containing only the asteroids that haven't exploded
+    remaining_asteroids = [asteroid for asteroid in asteroid_list if not asteroid.getExplosion()]
+
     # Calculate the scaling factor based on time
     while pygame.time.get_ticks() - ExplosionTime < explosion_duration:
-        #Show other asteroids
+        for asteroid in remaining_asteroids:
+            AsteroidImglien = "./assets/Asteroid/Asteroid" + str(asteroid.getSkin()) + ".png"
+            AsteroidImg = pygame.image.load(AsteroidImglien).convert_alpha()
+
+            # Update the position of the asteroid
+            asteroid.setX(asteroid.getX() - asteroid.getSpeed())
+            asteroid.update_rotation()
+
+            # Render the asteroid
+            image_rotated = pygame.transform.rotate(AsteroidImg, asteroid.getRotate())
+            rect_rotated = image_rotated.get_rect(center=(asteroid.getX(), asteroid.getY()))
+            ecran.blit(image_rotated, rect_rotated.topleft)
+
+        # Update the position and rotation of all asteroids outside the loop
         for asteroid in asteroid_list:
-            if not asteroid.getExplosion :
-                AsteroidImglien = "./assets/Asteroid/Asteroid" + str(asteroid.getSkin()) + ".png"
-                AsteroidImg = pygame.image.load(AsteroidImglien).convert_alpha()
-                image_rotated = pygame.transform.rotate(AsteroidImg, asteroid.getRotate())
-                rect_rotated = image_rotated.get_rect(center=(asteroid.getX(), asteroid.getY()))
-                ecran.blit(image_rotated, rect_rotated.topleft)
-        explosion_scale = min(explosion_scale + 0.08, 2.0)  # Increase scale gradually, up to a maximum of 2
+            if not asteroid.getExplosion():
+                asteroid.setX(asteroid.getX() - asteroid.getSpeed())
+                asteroid.update_rotation()
 
-        # Resize the explosion image
+        explosion_scale = min(explosion_scale + 0.08, 2.0)
+
         explosion_scaled = pygame.transform.scale(ExplosionImg, (int(ExplosionImg.get_width() * explosion_scale), int(ExplosionImg.get_height() * explosion_scale)))
-
-        # Calculate the position for centering
         explosion_rect = explosion_scaled.get_rect(center=pos)
 
-        # Draw the explosion on a transparent surface
         explosion_surface = pygame.Surface((Screenwide, Screenheight), pygame.SRCALPHA)
         explosion_surface.blit(explosion_scaled, explosion_rect.topleft)
 
-        # Draw lines from the lower corners to the center of the target with a 1-pixel black border
         pygame.draw.line(ecran, (0, 0, 0), (57, Screenheight-37), pos_Crosshair, 14)
         pygame.draw.line(ecran, (0, 0, 0), (Screenwide-57, Screenheight-37), pos_Crosshair, 14)
 
         pygame.draw.line(ecran, (35, 109, 73), (57, Screenheight-37), pos_Crosshair, 10)
         pygame.draw.line(ecran, (35, 109, 73), (Screenwide-57, Screenheight-37), pos_Crosshair, 10)
 
-        # Blit the explosion surface on the main screen
         ecran.blit(explosion_surface, (0, 0))
         ecran.blit(CrosshairImg, (pos_Crosshair[0] - CrosshairImg.get_width() / 2, pos_Crosshair[1] - CrosshairImg.get_height() / 2))
         ecran.blit(background_overlay, (0, 0))
@@ -179,13 +187,11 @@ def display_explosion(pos, ecran):
         ecran.blit(counter_text, (70, 5))
         ecran.blit(timer_text, (Screenwide-250, 5))
 
-        # Update the display
         pygame.display.flip()
-
-        # Control the frame rate
         pygame.time.delay(30)
 
     return explosion_rect
+
 #endregion Explosion Animation
 
 while continuer:
